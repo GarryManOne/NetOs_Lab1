@@ -271,6 +271,8 @@ int main(int argc, char *argv[]){
     }
     
 
+    
+
     // Инициализация мьютекса
     pthread_mutex_init(&lock_field, NULL);
 
