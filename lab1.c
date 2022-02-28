@@ -135,15 +135,22 @@ void CreateThreads(pthread_t tr[], unsigned int count_threads, TypeAnimal type){
         map_attributes->type = type;                                // тип животного
         map_attributes->dead = 0;                                   // состояние
 
-        // pthread_mutex_unlock(&lock_field); // блокирвка мьютекса
+        int flag = 0;
         do
         {
             animal_attributes->coord.x = get_rand_range_int(0, kMapSizeX);
             animal_attributes->coord.y = get_rand_range_int(0, kMapSizeY);
+            pthread_mutex_lock(&mutexes[animal_attributes->coord.x][animal_attributes->coord.y]);
+            if (actionField[animal_attributes->coord.x][animal_attributes->coord.y] == NULL){
+                actionField[animal_attributes->coord.x][animal_attributes->coord.y] = map_attributes;
+            }
+            else{
+                flag = 1;
+            }
+        } while ( flag == 0)
+                
 
-        } while (actionField[animal_attributes->coord.x][animal_attributes->coord.y] != NULL);
-
-        actionField[animal_atr->coord.x][animal_atr->coord.y] = animal_coordinate;
+        
 
         pthread_mutex_unlock(&lock_field); // разблокировка мьютекса
 
@@ -275,9 +282,6 @@ int main(int argc, char *argv[]){
     mutexes = CreateArrayMutexes(kMapSizeX, kMapSizeY);
     InitArrayMutexes(mutexes, kMapSizeX, kMapSizeY);
 
-    // // Инициализация мьютекса
-    // pthread_mutex_init(&lock_field, NULL);
-
     // Создание потоков
     pthread_t animal_1[animal1Count];
     pthread_t animal_2[animal2Count];
@@ -290,30 +294,10 @@ int main(int argc, char *argv[]){
     // pthread_create(&print, NULL, &print_field, NULL);
     // pthread_cond_broadcast(&stack_cond);
 
-    // CreateJoins(animal_1,animal1Count);
-    // CreateJoins(animal_2,animal2Count);
-    // CreateJoins(animal_3,animal3Count);
-
-    // Вывод отладочной информации
+    // CreateJoins(animal_1, animal1Count);
+    // CreateJoins(animal_2, animal2Count);
+    // CreateJoins(animal_3, animal3Count);
     
-    
-    for (int i = 0; i < animal1Count; i++)
-    {
-        pthread_join(animal_1[i], NULL);
-    }
-
-    for (int i = 0; i < animal2Count; i++)
-    {
-        pthread_join(animal_2[i], NULL);
-    }
-
-    for (int i = 0; i < animal1Count; i++)
-    {
-        pthread_join(animal_2[i], NULL);
-    }
-
-    // pthread_mutex_destroy(&lock_field);
-
     return 0;
 }
 
