@@ -12,7 +12,7 @@ int get_rand_range_int(int min, int max){
 }
 
 // Функция работающая в отдельном потоке
-void* animal(void* atr){
+void* Animal(void* atr){
 
     // Начальное состояние
     AnimalAttributes* attributes = (AnimalAttributes*) atr;
@@ -78,7 +78,7 @@ void* animal(void* atr){
                 pthread_t *thread_animal = malloc(sizeof(pthread_t));
                 // printf("%u породил %u\n", pthread_self(), *thread_animal);
                 fprintf(fp, "%u -> + %u\n", pthread_self(), *thread_animal);
-                create_threads(thread_animal, 1, attributes->type);
+                CreateThreads(thread_animal, 1, attributes->type);
                 pthread_mutex_unlock(&lock_field); // разблокировка мьютекса
                 continue;
             }
@@ -122,7 +122,7 @@ void* animal(void* atr){
 }
 
 // Создание потоков
-void create_threads(pthread_t tr[],int count, TypeAnimal type){
+void CreateThreads(pthread_t tr[],int count, TypeAnimal type){
 
     for (int i = 0; i < count; i++){
         AnimalAttributes *animal_attributes = malloc(sizeof(AnimalAttributes));
@@ -136,8 +136,6 @@ void create_threads(pthread_t tr[],int count, TypeAnimal type){
         map_attributes->dead = 0;                                   // состояние
 
         // pthread_mutex_unlock(&lock_field); // блокирвка мьютекса
-
-        // Выбор случайного положения
         do
         {
             animal_attributes->coord.x = get_rand_range_int(0, kMapSizeX);
@@ -149,7 +147,7 @@ void create_threads(pthread_t tr[],int count, TypeAnimal type){
 
         pthread_mutex_unlock(&lock_field); // разблокировка мьютекса
 
-        pthread_create(&tr[i], NULL, &animal, animal_atr);
+        pthread_create(&tr[i], NULL, &Animal, animal_atr);
 
         // Вывод отладочной информации
         printf("[%d][%d] = %d\n", animal_atr->coord.x, animal_atr->coord.y, type);
@@ -159,14 +157,44 @@ void create_threads(pthread_t tr[],int count, TypeAnimal type){
     }
 }
 
-void create_join(pthread_t tr[],int count){
+void CreateJoins(pthread_t tr[],int count){
     for (int i = 0; i < count; i++){
         pthread_join(tr[i], NULL);
     }
 }
 
+// Вывод карты в консоль
+void PrintMap(MapAttributes*** map, unsigned int row, unsigned int column){
+    for (int i = 0; i < row; i++){
+            for (int j = 0; j < column; j++)
+            {
+                if (map[i][j] != NULL)
+                {
+                    switch (actionField[i][j]->type)
+                    {
+                        case ANIMAL_1:
+                            printf("[0]");
+                            break;
+                        case ANIMAL_2:
+                            printf("[1]");
+                            break;
+                        case ANIMAL_3:
+                            printf("[2]");
+                            break;           
+                        default:
+                            break;
+                    }
+                }
+                else{
+                    printf("[*]");
+                }
+            }
+            printf("\n");
+        }
+}
+
 // Открытие файла для записи в потоках
-void open_file(char* fileName){
+void OpenFile(char* fileName){
     
     if ((fp = fopen(fileName, "w")) == NULL)
     {
@@ -177,7 +205,7 @@ void open_file(char* fileName){
 }
 
 // Создание массива мьютексов
-pthread_mutex_t** create_array_mutexes(unsigned int row, unsigned int column){
+pthread_mutex_t** CreateArrayMutexes(unsigned int row, unsigned int column){
     pthread_mutex_t** mutexes = (pthread_mutex_t**)malloc(row * sizeof(pthread_mutex_t*));
 
     for (int i = 0; i < column; i++)
@@ -189,7 +217,7 @@ pthread_mutex_t** create_array_mutexes(unsigned int row, unsigned int column){
 }
 
 // Инициализация мьютексов
-void init_array_mutexes(pthread_mutex_t** array_mutexes, unsigned int row, unsigned int column){
+void InitArrayMutexes(pthread_mutex_t** array_mutexes, unsigned int row, unsigned int column){
     for (int i = 0; i < row; i++){
         for (int j = 0; j < column; j++){
             pthread_mutex_init(&array_mutexes[i][j], NULL);
@@ -198,7 +226,7 @@ void init_array_mutexes(pthread_mutex_t** array_mutexes, unsigned int row, unsig
 }
 
 // Удаление массива мьютексов
-void delete_array_mutexes(pthread_mutex_t** array_mutexes, unsigned int row, unsigned int column){
+void DeleteArrayMutexes(pthread_mutex_t** array_mutexes, unsigned int row, unsigned int column){
 for (int i = 0; i < row; i++){
         for (int j = 0; j < column; j++){
             pthread_mutex_destroy(&array_mutexes[i][j]);
@@ -243,8 +271,8 @@ int main(int argc, char *argv[]){
     }
 
     // Создание и инициализация мьютексов
-    mutexes = create_array_mutexes(kMapSizeX, kMapSizeY);
-    init_array_mutexes(mutexes, kMapSizeX, kMapSizeY);
+    mutexes = CreateArrayMutexes(kMapSizeX, kMapSizeY);
+    InitArrayMutexes(mutexes, kMapSizeX, kMapSizeY);
 
     // // Инициализация мьютекса
     // pthread_mutex_init(&lock_field, NULL);
@@ -254,44 +282,19 @@ int main(int argc, char *argv[]){
     pthread_t animal_2[animal2Count];
     pthread_t animal_3[animal3Count];
 
-    create_threads(animal_1, animal1Count, ANIMAL_1);
-    create_threads(animal_2, animal2Count, ANIMAL_2);
-    create_threads(animal_3, animal3Count, ANIMAL_3);
+    CreateThreads(animal_1, animal1Count, ANIMAL_1);
+    CreateThreads(animal_2, animal2Count, ANIMAL_2);
+    CreateThreads(animal_3, animal3Count, ANIMAL_3);
 
     // pthread_create(&print, NULL, &print_field, NULL);
     // pthread_cond_broadcast(&stack_cond);
 
-    // create_join(animal_1,animal1Count);
-    // create_join(animal_2,animal2Count);
-    // create_join(animal_3,animal3Count);
+    // CreateJoins(animal_1,animal1Count);
+    // CreateJoins(animal_2,animal2Count);
+    // CreateJoins(animal_3,animal3Count);
 
     // Вывод отладочной информации
-    for (int i=0; i < kSizeX; i++){
-        for (int j=0; j < kSizeY; j++)
-        {
-            if (actionField[i][j] != NULL)
-            {
-                switch (actionField[i][j]->type)
-                {
-                    case ANIMAL_1:
-                        printf("[0]");
-                        break;
-                    case ANIMAL_2:
-                        printf("[1]");
-                        break;
-                    case ANIMAL_3:
-                        printf("[2]");
-                        break;           
-                    default:
-                        break;
-                }
-            }
-            else{
-                printf("[*]");
-            }
-        }
-        printf("\n");
-    }
+    
     
     for (int i = 0; i < animal1Count; i++)
     {
@@ -308,7 +311,7 @@ int main(int argc, char *argv[]){
         pthread_join(animal_2[i], NULL);
     }
 
-    pthread_mutex_destroy(&lock_field);
+    // pthread_mutex_destroy(&lock_field);
 
     return 0;
 }

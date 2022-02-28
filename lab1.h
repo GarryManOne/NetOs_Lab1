@@ -59,7 +59,7 @@ typedef struct {
 MapAttributes* actionField[kMapSizeX][kMapSizeY];
 
 // Мьютекс
-pthread_mutex_t lock_field;
+// pthread_mutex_t lock_field;
 pthread_mutex_t **mutexes;
 
 // Указатель на файл
@@ -70,11 +70,11 @@ FILE *fp;
 
 // *************************** Прототипы функций **************************
 
-void* animal(void* atr);
-void create_threads(pthread_t* tr,int count, TypeAnimal type);
+void* Animal(void* atr);
+void CreateThreads(pthread_t* tr,int count, TypeAnimal type);
 int get_rand_range_int(int min, int max);
-pthread_mutex_t** create_array_mutexes(unsigned int row, unsigned int column);
-void delete_array_mutexes(pthread_mutex_t** array_mutexes, unsigned int row, unsigned int column);
+pthread_mutex_t** CreateArrayMutexes(unsigned int row, unsigned int column);
+void DeleteArrayMutexes(pthread_mutex_t** array_mutexes, unsigned int row, unsigned int column);
 
 // ************************************************************************
 
