@@ -122,9 +122,9 @@ void* Animal(void* atr){
 }
 
 // Создание потоков
-void CreateThreads(pthread_t tr[],int count, TypeAnimal type){
+void CreateThreads(pthread_t tr[], unsigned int count_threads, TypeAnimal type){
 
-    for (int i = 0; i < count; i++){
+    for (int i = 0; i < count_threads; i++){
         AnimalAttributes *animal_attributes = malloc(sizeof(AnimalAttributes));
         animal_attributes->type = type;                             // тип животного
         animal_attributes->life_time = kLifeTime;                   // время жизни
@@ -157,8 +157,9 @@ void CreateThreads(pthread_t tr[],int count, TypeAnimal type){
     }
 }
 
-void CreateJoins(pthread_t tr[],int count){
-    for (int i = 0; i < count; i++){
+// Ожидание потоков
+void CreateJoins(pthread_t* tr, unsigned int count_threads){
+    for (int i = 0; i < count_threads; i++){
         pthread_join(tr[i], NULL);
     }
 }
