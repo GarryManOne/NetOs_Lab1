@@ -4,71 +4,22 @@
 #include <pthread.h>
 #include <time.h>
 #include <malloc.h>
-
-// Продолжительность жизни(измеряется в количествах сделанных переходов)
-#define LIFE_TIME 10
-
-// Продолжительность голодания(измеряется в количествах сделанных переходов)
-#define STARVATION_TIME 5
-
-// Размеры поля 
-#define SIZE_X 8
-#define SIZE_Y 8
-
-// Указатель на файл
-FILE *fp;
-
-// Виды животных
-typedef enum {ANIMAL_1, ANIMAL_2, ANIMAL_3} TypeAnimal;
-
-// Передвижение
-typedef enum {RIGHT, LEFT, UP, DOWN} Direction;
-
-// Положение животного на поле
-typedef struct {
-    int x;
-    int y;
-} Coordinate;
-
-// Свойства
-typedef struct {
-    Coordinate coord;
-    TypeAnimal type;
-    int life_time;
-    int starvation_time;
-} Animal;
-
-typedef struct {
-    pthread_t thread_id;
-    TypeAnimal type;
-    int dead; 
-} AnimalCoordinate;
-
-// Поле по которым перемещаются животные
-AnimalCoordinate* actionField[SIZE_X][SIZE_Y];
-
-// Мьютекс
-pthread_mutex_t lock_field;
-pthread_mutex_t **ptr_mutex;
-
-void* animal(void* atr);
-void create_threads(pthread_t* tr,int count, TypeAnimal type);
-int get_rand_range_int(int min, int max);
+#include "lab1.h"
 
 // Генерация псевдослучайных чисел на определнном промежутке
 int get_rand_range_int(int min, int max){
-    return rand() % (max - min + 1) + min;
+    return rand() % (max - min) + min;
 }
 
 // Функция работающая в отдельном потоке
 void* animal(void* atr){
 
     // Начальное состояние
-    Animal* attributes = (Animal*) atr;
+    AnimalAttributes* attributes = (AnimalAttributes*) atr;
 
     while (1){
         // Смотрим продолжительность жизни 
-        if (attributes->life_time == 0 || attributes->starvation_time == 0)
+        if (attributes->kLifeTime == 0 || attributes->kStarvationTime == 0)
         {
             pthread_exit(NULL);
         }
@@ -79,7 +30,7 @@ void* animal(void* atr){
         // Случайное движение 
         switch ((Direction)(get_rand_range_int(0, 3))){
             case RIGHT:
-                if ((attributes->coord.x + 1) < SIZE_X){
+                if ((attributes->coord.x + 1) < kSizeX){
                     attributes->coord.x += 1;
                 }
                 else continue;
@@ -97,7 +48,7 @@ void* animal(void* atr){
                 else continue;
                 break;
             case DOWN: 
-                if ((attributes->coord.y + 1) < SIZE_Y){
+                if ((attributes->coord.y + 1) < kSizeY){
                     attributes->coord.y += 1;
                 }
                 else continue;
@@ -174,24 +125,25 @@ void* animal(void* atr){
 void create_threads(pthread_t tr[],int count, TypeAnimal type){
 
     for (int i = 0; i < count; i++){
-        Animal *animal_atr = malloc(sizeof(Animal));
-        animal_atr->type = type;            // тип
-        animal_atr->life_time = LIFE_TIME;  // время жизни
-        animal_atr->starvation_time = STARVATION_TIME;  // время голодания
+        AnimalAttributes *animal_attributes = malloc(sizeof(AnimalAttributes));
+        animal_attributes->type = type;                             // тип животного
+        animal_attributes->life_time = kLifeTime;                   // время жизни
+        animal_attributes->startvation_time = kStarvationTime;      // время голодания
 
-        AnimalCoordinate *animal_coordinate = malloc(sizeof(AnimalCoordinate));
-        animal_coordinate->thread_id = tr[i];
-        animal_coordinate->type = type;
-        animal_coordinate->dead = 0;
-        pthread_mutex_unlock(&lock_field); // блокирвка мьютекса
+        MapAttributes *map_attributes = malloc(sizeof(MapAttributes));
+        map_attributes->thread_id = tr[i];                          // id потока
+        map_attributes->type = type;                                // тип животного
+        map_attributes->dead = 0;                                   // состояние
+
+        // pthread_mutex_unlock(&lock_field); // блокирвка мьютекса
 
         // Выбор случайного положения
         do
         {
-            animal_atr->coord.x = get_rand_range_int(0, SIZE_X - 1);
-            animal_atr->coord.y = get_rand_range_int(0, SIZE_Y - 1);
+            animal_attributes->coord.x = get_rand_range_int(0, kMapSizeX);
+            animal_attributes->coord.y = get_rand_range_int(0, kMapSizeY);
 
-        } while (actionField[animal_atr->coord.x][animal_atr->coord.y] != NULL);
+        } while (actionField[animal_attributes->coord.x][animal_attributes->coord.y] != NULL);
 
         actionField[animal_atr->coord.x][animal_atr->coord.y] = animal_coordinate;
 
@@ -201,7 +153,7 @@ void create_threads(pthread_t tr[],int count, TypeAnimal type){
 
         // Вывод отладочной информации
         printf("[%d][%d] = %d\n", animal_atr->coord.x, animal_atr->coord.y, type);
-        printf("type=%d l_t=%d s_t=%d [%d] [%d]\n", animal_atr->type, animal_atr->life_time, animal_atr->starvation_time, animal_atr->coord.x, animal_atr->coord.y);
+        printf("type=%d l_t=%d s_t=%d [%d] [%d]\n", animal_atr->type, animal_atr->kLifeTime, animal_atr->kStarvationTime, animal_atr->coord.x, animal_atr->coord.y);
         printf("%u %d\n", animal_coordinate->thread_id = tr[i], animal_coordinate->type);
 
     }
@@ -224,6 +176,37 @@ void open_file(char* fileName){
 
 }
 
+// Создание массива мьютексов
+pthread_mutex_t** create_array_mutexes(unsigned int row, unsigned int column){
+    pthread_mutex_t** mutexes = (pthread_mutex_t**)malloc(row * sizeof(pthread_mutex_t*));
+
+    for (int i = 0; i < column; i++)
+    {
+        mutexes[i] = (pthread_mutex_t*)malloc(column * sizeof(pthread_mutex_t));
+    }
+     
+    return mutexes;
+}
+
+// Инициализация мьютексов
+void init_array_mutexes(pthread_mutex_t** array_mutexes, unsigned int row, unsigned int column){
+    for (int i = 0; i < row; i++){
+        for (int j = 0; j < column; j++){
+            pthread_mutex_init(&array_mutexes[i][j], NULL);
+        }
+    }
+}
+
+// Удаление массива мьютексов
+void delete_array_mutexes(pthread_mutex_t** array_mutexes, unsigned int row, unsigned int column){
+for (int i = 0; i < row; i++){
+        for (int j = 0; j < column; j++){
+            pthread_mutex_destroy(&array_mutexes[i][j]);
+        }
+    }
+}
+
+// Главная функция
 int main(int argc, char *argv[]){
     
     srand(time(NULL));
@@ -247,34 +230,24 @@ int main(int argc, char *argv[]){
 
     // Проверка на максимальное количество потоков которые возможно создать
     int allAnimalsCount = animal1Count + animal2Count + animal3Count;
-    if (allAnimalsCount > SIZE_X * SIZE_Y){
-        printf("Превышенно количество животных! Максимум: %d\n", SIZE_X * SIZE_Y);
+    if (allAnimalsCount > kMapSizeX * kMapSizeY){
+        printf("Превышенно количество животных! Максимум: %d\n", kMapSizeX * kMapSizeY);
         return 1;
     }
 
-    // Обнуление поля 
-    for (int i = 0; i < SIZE_X; i++){
-        for (int j = 0; j < SIZE_Y; j++){
+    // Обнуление карты 
+    for (int i = 0; i < kMapSizeX; i++){
+        for (int j = 0; j < kMapSizeY; j++){
             actionField[i][j] = NULL;
         }
     }
 
-    open_file((char*)"test.txt");
+    // Создание и инициализация мьютексов
+    mutexes = create_array_mutexes(kMapSizeX, kMapSizeY);
+    init_array_mutexes(mutexes, kMapSizeX, kMapSizeY);
 
-    for (int i = 0; i < SIZE_X; i++)
-    {
-        ptr_mutex = (pthread_mutex_t*)malloc(SIZE_X * sizeof(pthread_mutex_t));
-        for (int j = 0; j < SIZE_Y; j++)
-        {
-            ptr_mutex[j] = (pthread_mutex_t*)malloc(SIZE_Y * sizeof(pthread_mutex_t));
-        }
-    }
-    
-
-    
-
-    // Инициализация мьютекса
-    pthread_mutex_init(&lock_field, NULL);
+    // // Инициализация мьютекса
+    // pthread_mutex_init(&lock_field, NULL);
 
     // Создание потоков
     pthread_t animal_1[animal1Count];
@@ -293,8 +266,8 @@ int main(int argc, char *argv[]){
     // create_join(animal_3,animal3Count);
 
     // Вывод отладочной информации
-    for (int i=0; i < SIZE_X; i++){
-        for (int j=0; j < SIZE_Y; j++)
+    for (int i=0; i < kSizeX; i++){
+        for (int j=0; j < kSizeY; j++)
         {
             if (actionField[i][j] != NULL)
             {
@@ -339,3 +312,6 @@ int main(int argc, char *argv[]){
 
     return 0;
 }
+
+
+
