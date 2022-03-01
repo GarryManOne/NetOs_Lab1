@@ -41,13 +41,13 @@ typedef struct {
     TypeAnimal type;
     int life_time;
     int startvation_time;
+    pthread_t thread_id;
 } AnimalAttributes;
 
 // Атрибуты карты
 typedef struct {
     pthread_t thread_id;
     TypeAnimal type;
-    int dead; 
 } MapAttributes;
 
 // ************************************************************************
@@ -78,11 +78,10 @@ void DeleteArrayMutexes(pthread_mutex_t** array_mutexes, unsigned int row, unsig
 void InitArrayMutexes(pthread_mutex_t** array_mutexes, unsigned int row, unsigned int column);
 
 // Создание массива мьютексов
-void CreateArrayMutexes(pthread_mutex_t** mutexes, unsigned int row, unsigned int column);
+pthread_mutex_t** CreateArrayMutexes(unsigned int row, unsigned int column);
 
 // Создание карты
-void CreateMap(MapAttributes** map_attrubutes, unsigned int row, unsigned int column);
-
+MapAttributes** CreateMap(unsigned int row, unsigned int column);
 // Открытие файла для записи в потоках
 void OpenFile(char* fileName);
 
