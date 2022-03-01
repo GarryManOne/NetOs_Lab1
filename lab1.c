@@ -284,19 +284,27 @@ int main(int argc, char *argv[]){
     mutexes = CreateArrayMutexes(kMapSizeX, kMapSizeY);
     InitArrayMutexes(mutexes, kMapSizeX, kMapSizeY);
 
-    // Создание потоков
     pthread_t animal_1[animal1Count];
     pthread_t animal_2[animal2Count];
     pthread_t animal_3[animal3Count];
 
+    // Создание потоков
     CreateThreads(animal_1, animal1Count, ANIMAL_1);
     CreateThreads(animal_2, animal2Count, ANIMAL_2);
     CreateThreads(animal_3, animal3Count, ANIMAL_3);
 
-
+    // Создание джойнов
     CreateJoins(animal_1, animal1Count);
     CreateJoins(animal_2, animal2Count);
     CreateJoins(animal_3, animal3Count);
-    
+
+    // Освобождение памяти
+    DeleteArrayMutexes(mutexes, kMapSizeX, kMapSizeY);
+
+    for (int i = 0; i < kMapSizeX; i++){
+        free(map[i]);
+    }
+    free(map);
+
     return 0;
 }
