@@ -70,10 +70,27 @@ FILE *fp;
 // *************************** Прототипы функций **************************
 
 void* Animal(void* atr);
-void CreateThreads(pthread_t* tr,int count, TypeAnimal type);
-int get_rand_range_int(int min, int max);
-pthread_mutex_t** CreateArrayMutexes(unsigned int row, unsigned int column);
+
+// Удаление массива мьютексов
 void DeleteArrayMutexes(pthread_mutex_t** array_mutexes, unsigned int row, unsigned int column);
+
+// Инициализация мьютексов
+void InitArrayMutexes(pthread_mutex_t** array_mutexes, unsigned int row, unsigned int column);
+
+// Создание массива мьютексов
+void CreateArrayMutexes(pthread_mutex_t** mutexes, unsigned int row, unsigned int column);
+
+// Создание карты
+void CreateMap(MapAttributes** map_attrubutes, unsigned int row, unsigned int column);
+
+// Открытие файла для записи в потоках
+void OpenFile(char* fileName);
+
+// Вывод карты в консоль
+void PrintMap(MapAttributes*** map, unsigned int row, unsigned int column);
+
+// Ожидание потоков
+void CreateJoins(pthread_t* thread, unsigned int count_threads);
 
 // ************************************************************************
 

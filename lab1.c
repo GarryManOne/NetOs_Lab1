@@ -122,18 +122,13 @@ int get_rand_range_int(int min, int max){
 // }
 
 // Создание потоков
-void CreateThreads(pthread_t tr[], unsigned int count_threads, TypeAnimal type){
+void CreateThreads(pthread_t threads[], unsigned int count_threads, TypeAnimal type){
 
     for (int i = 0; i < count_threads; i++){
-        AnimalAttributes *animal_attributes = malloc(sizeof(AnimalAttributes));
+        AnimalAttributes *animal_attributes = (AnimalAttributes*)malloc(sizeof(AnimalAttributes));
         animal_attributes->type = type;                             // тип животного
         animal_attributes->life_time = kLifeTime;                   // время жизни
         animal_attributes->startvation_time = kStarvationTime;      // время голодания
-
-        MapAttributes *map_attributes = malloc(sizeof(MapAttributes));
-        map_attributes->thread_id = tr[i];                          // id потока
-        map_attributes->type = type;                                // тип животного
-        map_attributes->dead = 0;                                   // состояние
 
         int flag = 0;
         do
@@ -141,43 +136,39 @@ void CreateThreads(pthread_t tr[], unsigned int count_threads, TypeAnimal type){
             animal_attributes->coord.x = get_rand_range_int(0, kMapSizeX);
             animal_attributes->coord.y = get_rand_range_int(0, kMapSizeY);
             pthread_mutex_lock(&mutexes[animal_attributes->coord.x][animal_attributes->coord.y]);
-            if (map[animal_attributes->coord.x][animal_attributes->coord.y] == NULL){
-                map[animal_attributes->coord.x][animal_attributes->coord.y] = map_attributes;
+            if (map[animal_attributes->coord.x][animal_attributes->coord.y].thread_id == 0){
+                map[animal_attributes->coord.x][animal_attributes->coord.y].dead = 0;
+                map[animal_attributes->coord.x][animal_attributes->coord.y].type = type;
+                map[animal_attributes->coord.x][animal_attributes->coord.y].thread_id = threads[i]; 
             }
             else{
                 flag = 1;
             }
-        } while ( flag == 0)
-                
+            pthread_mutex_unlock(&mutexes[animal_attributes->coord.x][animal_attributes->coord.y]);
+        } while ( flag == 0);
 
-        
-
-        pthread_mutex_unlock(&lock_field); // разблокировка мьютекса
-
-        pthread_create(&tr[i], NULL, &Animal, animal_atr);
+        // pthread_create(&threads[i], NULL, &Animal, animal_attributes);
 
         // Вывод отладочной информации
-        printf("[%d][%d] = %d\n", animal_atr->coord.x, animal_atr->coord.y, type);
-        printf("type=%d l_t=%d s_t=%d [%d] [%d]\n", animal_atr->type, animal_atr->kLifeTime, animal_atr->kStarvationTime, animal_atr->coord.x, animal_atr->coord.y);
-        printf("%u %d\n", animal_coordinate->thread_id = tr[i], animal_coordinate->type);
+        printf("[%d][%d] = %d\n", animal_attributes->coord.x, animal_attributes->coord.y, type);
+        printf("type=%d l_t=%d s_t=%d [%d] [%d]\n", animal_attributes->type, animal_attributes->life_time, animal_attributes->startvation_time, animal_attributes->coord.x, animal_attributes->coord.y);
+        // printf("%u %d\n", animal_coordinate->thread_id = tr[i], animal_coordinate->type);
 
     }
 }
 
 // Ожидание потоков
-void CreateJoins(pthread_t* tr, unsigned int count_threads){
+void CreateJoins(pthread_t* thread, unsigned int count_threads){
     for (int i = 0; i < count_threads; i++){
-        pthread_join(tr[i], NULL);
+        pthread_join(thread[i], NULL);
     }
 }
 
 // Вывод карты в консоль
 void PrintMap(MapAttributes*** map, unsigned int row, unsigned int column){
     for (int i = 0; i < row; i++){
-            for (int j = 0; j < column; j++)
-            {
-                if (map[i][j] != NULL)
-                {
+            for (int j = 0; j < column; j++){
+                if (map[i][j] != NULL){
                     switch (map[i][j]->type)
                     {
                         case ANIMAL_1:
@@ -198,26 +189,22 @@ void PrintMap(MapAttributes*** map, unsigned int row, unsigned int column){
                 }
             }
             printf("\n");
-        }
+    }
 }
 
 // Открытие файла для записи в потоках
 void OpenFile(char* fileName){
-    
-    if ((fp = fopen(fileName, "w")) == NULL)
-    {
+    if ((fp = fopen(fileName, "w")) == NULL){
         printf("Не удалось открыть файл");
         getchar();
     }
-
 }
 
 // Создание карты
 void CreateMap(MapAttributes** map_attrubutes, unsigned int row, unsigned int column){
     map_attrubutes = (MapAttributes**)malloc(row * sizeof(MapAttributes*));
 
-    for (int i = 0; i < column; i++)
-    {
+    for (int i = 0; i < column; i++){
         map_attrubutes[i] = (MapAttributes*)malloc(column * sizeof(MapAttributes));
     }
 }
@@ -226,8 +213,7 @@ void CreateMap(MapAttributes** map_attrubutes, unsigned int row, unsigned int co
 void CreateArrayMutexes(pthread_mutex_t** mutexes, unsigned int row, unsigned int column){
     mutexes = (pthread_mutex_t**)malloc(row * sizeof(pthread_mutex_t*));
 
-    for (int i = 0; i < column; i++)
-    {
+    for (int i = 0; i < column; i++){
         mutexes[i] = (pthread_mutex_t*)malloc(column * sizeof(pthread_mutex_t));
     }
 }
@@ -285,12 +271,13 @@ int main(int argc, char *argv[]){
     // Обнуление карты 
     for (int i = 0; i < kMapSizeX; i++){
         for (int j = 0; j < kMapSizeY; j++){
-            map[i][j] = NULL;
+            map[i][j].thread_id = 0;
         }
     }
 
+
     // Создание и инициализация мьютексов
-    CreateArrayMutexes(kMapSizeX, kMapSizeY);
+    CreateArrayMutexes(mutexes, kMapSizeX, kMapSizeY);
     InitArrayMutexes(mutexes, kMapSizeX, kMapSizeY);
 
     // Создание потоков
