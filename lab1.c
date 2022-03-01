@@ -86,30 +86,30 @@ void* Animal(void* atr){
             }
             // Ест
             else if ((attributes->type + 1 ) % 3 == map[coordX][coordY].type){
-                map[coordX][coordY].dead = 1;
-
-
-
+                map[coordX][coordY].thread_id = attributes->thread_id;
+                map[coordX][coordY].type = attributes->type;
+                attributes->life_time -= 1;
+                attributes->startvation_time -= 1;
                 fprintf(fp, "%u -> x %u\n", pthread_self(), map[coordX][coordY].thread_id);
-
             }
             // Его едят
             else{
-                // printf("%u умер от %u\n", map[coor_old.x][coor_old.y]->thread_id, map[coordX][coordY]->thread_id);
-                fprintf(fp, "%u -> - %u\n", map[coor_old.x][coor_old.y]->thread_id, map[coordX][coordY]->thread_id);
-                map[coor_old.x][coor_old.y] = NULL;
+                fprintf(fp, "%u -> - %u\n", map[coor_old.x][coor_old.y].thread_id, map[coordX][coordY].thread_id);
+                map[coor_old.x][coor_old.y].thread_id = 0;
                 pthread_exit(NULL);
             }
         }
         else
         {
-            AnimalCoordinate *an_coord = malloc(sizeof(AnimalCoordinate));
+            // Обнуление прошлой ячейки
+            map[coor_old.x][coor_old.y].thread_id = 0;
 
-            an_coord->thread_id = map[coor_old.x][coor_old.y]->thread_id;
-            an_coord->type = attributes->type;
+            // Переход
+            map[coordX][coordY].thread_id = attributes->thread_id;
+            map[coordX][coordY].type = attributes->type;
+            attributes->life_time -= 1;
+            attributes->startvation_time -= 1;
 
-            map[coor_old.x][coor_old.y] = NULL;
-            map[coordX][coordY] = an_coord;
         }
         pthread_mutex_unlock(&mutexes[coor_old.x][coor_old.y]);
     }
