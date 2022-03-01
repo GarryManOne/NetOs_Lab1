@@ -57,13 +57,13 @@ typedef struct {
 // *************************** Глобальные перменные ***********************
 
 // Поле по которым перемещаются животные
-MapAttributes** map;
+MapAttributes** map = NULL;
 
 // Мьютекс
-pthread_mutex_t** mutexes;
+pthread_mutex_t** mutexes = NULL;
 
 // Указатель на файл
-FILE *fp;
+FILE *log_file = NULL;
 
 // ************************************************************************
 
@@ -83,8 +83,9 @@ pthread_mutex_t** CreateArrayMutexes(unsigned int row, unsigned int column);
 
 // Создание карты
 MapAttributes** CreateMap(unsigned int row, unsigned int column);
+
 // Открытие файла для записи в потоках
-void OpenFile(char* fileName);
+FILE* OpenFile(char* fileName);
 
 // Вывод карты в консоль
 void PrintMap(MapAttributes*** map, unsigned int row, unsigned int column);

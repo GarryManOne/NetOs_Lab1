@@ -28,7 +28,7 @@ void* Animal(void* atr){
         Coordinate coor_old = attributes->coord;
 
         // Случайное движение
-        if (attributes->return_back == 1)
+        if (attributes->return_back == 0)
         {
             switch ((Direction)(get_rand_range_int(0, 3))){
                 case RIGHT:
@@ -63,7 +63,7 @@ void* Animal(void* atr){
             attributes->return_back = 0;
         }
 
-        fprintf(fp, "%u=%d [%d][%d]->[%d][%d]\n", pthread_self(), (char *)attributes->type, attributes->coord.x, attributes->coord.y, coor_old.x, coor_old.y);
+        // printf("%u=%d [%d][%d]->[%d][%d]\n", pthread_self(), (char *)attributes->type, coor_old.x, coor_old.y, attributes->coord.x, attributes->coord.y);
 
         // Может мы уже умерли
         pthread_mutex_lock(&mutexes[coor_old.x][coor_old.y]);
@@ -85,7 +85,9 @@ void* Animal(void* atr){
             if (attributes->type == map[coordX][coordY].type){
                 pthread_t *thread_animal = (pthread_t*)malloc(sizeof(pthread_t));
                 CreateThreads(thread_animal, 1, attributes->type);
-                fprintf(fp, "%u -> + %u\n", pthread_self(), *thread_animal);
+                printf("Ok");
+                attributes->return_back = 1;
+                fprintf(log_file, "%u -> + %u\n", pthread_self(), *thread_animal);
             }
             // Ест
             else if ((attributes->type + 1 ) % 3 == map[coordX][coordY].type){
@@ -93,15 +95,14 @@ void* Animal(void* atr){
                 map[coordX][coordY].type = attributes->type;
                 attributes->life_time -= 1;
                 attributes->startvation_time -= 1;
-                fprintf(fp, "%u -> x %u\n", pthread_self(), map[coordX][coordY].thread_id);
+                fprintf(log_file, "%u -> x %u\n", pthread_self(), map[coordX][coordY].thread_id);
             }
             // Его едят
             else{
-                fprintf(fp, "%u -> - %u\n", map[coor_old.x][coor_old.y].thread_id, map[coordX][coordY].thread_id);
+                fprintf(log_file, "%u -> - %u\n", map[coor_old.x][coor_old.y].thread_id, map[coordX][coordY].thread_id);
                 map[coor_old.x][coor_old.y].thread_id = 0;
                 pthread_exit(NULL);
             }
-            pthread_mutex_unlock(&mutexes[coor_old.x][coor_old.y]);
         }
         else
         {
@@ -113,8 +114,10 @@ void* Animal(void* atr){
             map[coordX][coordY].type = attributes->type;
             attributes->life_time -= 1;
             attributes->startvation_time -= 1;
-
+            
+            fprintf(log_file, "%u=%d [%d][%d]->[%d][%d]\n", pthread_self(), (char *)attributes->type, attributes->coord.x, attributes->coord.y, coor_old.x, coor_old.y);
         }
+
         pthread_mutex_unlock(&mutexes[coor_old.x][coor_old.y]);
     }
     
@@ -194,11 +197,14 @@ void PrintMap(MapAttributes*** map, unsigned int row, unsigned int column){
 }
 
 // Открытие файла для записи в потоках
-void OpenFile(char* fileName){
-    if ((fp = fopen(fileName, "w")) == NULL){
+FILE* OpenFile(char* fileName){
+    FILE* file;
+    if ((file = fopen(fileName, "w")) == NULL){
         printf("Не удалось открыть файл");
         getchar();
     }
+
+    return file;
 }
 
 // Создание карты
@@ -269,6 +275,9 @@ int main(int argc, char *argv[]){
         printf("Превышенно количество животных! Максимум: %d\n", kMapSizeX * kMapSizeY);
         return 1;
     }
+
+    // Открытие файла
+    log_file = OpenFile((char*)"log.txt");
 
     // Создание карты
     map = CreateMap(kMapSizeX, kMapSizeY);
