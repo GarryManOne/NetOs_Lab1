@@ -42,6 +42,7 @@ typedef struct {
     int life_time;
     int startvation_time;
     pthread_t thread_id;
+    int return_back;
 } AnimalAttributes;
 
 // Атрибуты карты
@@ -89,7 +90,10 @@ void OpenFile(char* fileName);
 void PrintMap(MapAttributes*** map, unsigned int row, unsigned int column);
 
 // Ожидание потоков
-void CreateJoins(pthread_t* thread, unsigned int count_threads);
+void CreateJoins(pthread_t* threads, unsigned int count_threads);
+
+// Создание потоков
+void CreateThreads(pthread_t* threads, unsigned int count_threads, TypeAnimal type);
 
 // ************************************************************************
 

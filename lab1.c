@@ -27,34 +27,40 @@ void* Animal(void* atr){
         // Запоминаем координаты
         Coordinate coor_old = attributes->coord;
 
-        // Случайное движение 
-        switch ((Direction)(get_rand_range_int(0, 3))){
-            case RIGHT:
-                if ((attributes->coord.x + 1) < kMapSizeX){
-                    attributes->coord.x += 1;
-                }
-                else continue;
-                break;
-            case LEFT: 
-                if ((attributes->coord.x - 1) > 0){
-                    attributes->coord.x -= 1;
-                }
-                else continue;
-                break;
-            case UP: 
-                if ((attributes->coord.y - 1) > 0){
-                   attributes->coord.y -= 1;
-                }
-                else continue;
-                break;
-            case DOWN: 
-                if ((attributes->coord.y + 1) < kMapSizeY){
-                    attributes->coord.y += 1;
-                }
-                else continue;
-                break;
-            default:
-                break;
+        // Случайное движение
+        if (attributes->return_back == 1)
+        {
+            switch ((Direction)(get_rand_range_int(0, 3))){
+                case RIGHT:
+                    if ((attributes->coord.x + 1) < kMapSizeX){
+                        attributes->coord.x += 1;
+                    }
+                    else continue;
+                    break;
+                case LEFT: 
+                    if ((attributes->coord.x - 1) > 0){
+                        attributes->coord.x -= 1;
+                    }
+                    else continue;
+                    break;
+                case UP: 
+                    if ((attributes->coord.y - 1) > 0){
+                    attributes->coord.y -= 1;
+                    }
+                    else continue;
+                    break;
+                case DOWN: 
+                    if ((attributes->coord.y + 1) < kMapSizeY){
+                        attributes->coord.y += 1;
+                    }
+                    else continue;
+                    break;
+                default:
+                    break;
+            }
+        }
+        else{
+            attributes->return_back = 0;
         }
 
         fprintf(fp, "%u=%d [%d][%d]->[%d][%d]\n", pthread_self(), (char *)attributes->type, attributes->coord.x, attributes->coord.y, coor_old.x, coor_old.y);
@@ -77,12 +83,9 @@ void* Animal(void* atr){
             
             // Спаривание :)
             if (attributes->type == map[coordX][coordY].type){
-                pthread_t *thread_animal = malloc(sizeof(pthread_t));
-                // printf("%u породил %u\n", pthread_self(), *thread_animal);
-                fprintf(fp, "%u -> + %u\n", pthread_self(), *thread_animal);
+                pthread_t *thread_animal = (pthread_t*)malloc(sizeof(pthread_t));
                 CreateThreads(thread_animal, 1, attributes->type);
-                pthread_mutex_unlock(&lock_field); // разблокировка мьютекса
-                continue;
+                fprintf(fp, "%u -> + %u\n", pthread_self(), *thread_animal);
             }
             // Ест
             else if ((attributes->type + 1 ) % 3 == map[coordX][coordY].type){
@@ -98,6 +101,7 @@ void* Animal(void* atr){
                 map[coor_old.x][coor_old.y].thread_id = 0;
                 pthread_exit(NULL);
             }
+            pthread_mutex_unlock(&mutexes[coor_old.x][coor_old.y]);
         }
         else
         {
@@ -118,7 +122,7 @@ void* Animal(void* atr){
 }
 
 // Создание потоков
-void CreateThreads(pthread_t threads[], unsigned int count_threads, TypeAnimal type){
+void CreateThreads(pthread_t* threads, unsigned int count_threads, TypeAnimal type){
 
     for (int i = 0; i < count_threads; i++){
         AnimalAttributes *animal_attributes = (AnimalAttributes*)malloc(sizeof(AnimalAttributes));
@@ -126,6 +130,7 @@ void CreateThreads(pthread_t threads[], unsigned int count_threads, TypeAnimal t
         animal_attributes->life_time = kLifeTime;                   // время жизни
         animal_attributes->startvation_time = kStarvationTime;      // время голодания
         animal_attributes->thread_id = threads[i];                  // id потока
+        animal_attributes->return_back = 0;                         // флаг перемещения назад
 
         int flag = 0;
         do
@@ -143,7 +148,7 @@ void CreateThreads(pthread_t threads[], unsigned int count_threads, TypeAnimal t
             pthread_mutex_unlock(&mutexes[animal_attributes->coord.x][animal_attributes->coord.y]);
         } while ( flag == 0);
 
-        // pthread_create(&threads[i], NULL, &Animal, animal_attributes);
+        pthread_create(&threads[i], NULL, &Animal, animal_attributes);
 
         // Вывод отладочной информации
         printf("[%d][%d] = %d\n", animal_attributes->coord.x, animal_attributes->coord.y, type);
@@ -154,9 +159,9 @@ void CreateThreads(pthread_t threads[], unsigned int count_threads, TypeAnimal t
 }
 
 // Ожидание потоков
-void CreateJoins(pthread_t* thread, unsigned int count_threads){
+void CreateJoins(pthread_t* threads, unsigned int count_threads){
     for (int i = 0; i < count_threads; i++){
-        pthread_join(thread[i], NULL);
+        pthread_join(threads[i], NULL);
     }
 }
 
@@ -288,15 +293,10 @@ int main(int argc, char *argv[]){
     CreateThreads(animal_2, animal2Count, ANIMAL_2);
     CreateThreads(animal_3, animal3Count, ANIMAL_3);
 
-    // pthread_create(&print, NULL, &print_field, NULL);
-    // pthread_cond_broadcast(&stack_cond);
 
-    // CreateJoins(animal_1, animal1Count);
-    // CreateJoins(animal_2, animal2Count);
-    // CreateJoins(animal_3, animal3Count);
+    CreateJoins(animal_1, animal1Count);
+    CreateJoins(animal_2, animal2Count);
+    CreateJoins(animal_3, animal3Count);
     
     return 0;
 }
-
-
-
