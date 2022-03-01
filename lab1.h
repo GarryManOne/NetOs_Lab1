@@ -56,11 +56,10 @@ typedef struct {
 // *************************** Глобальные перменные ***********************
 
 // Поле по которым перемещаются животные
-MapAttributes* actionField[kMapSizeX][kMapSizeY];
+MapAttributes** map;
 
 // Мьютекс
-// pthread_mutex_t lock_field;
-pthread_mutex_t **mutexes;
+pthread_mutex_t** mutexes;
 
 // Указатель на файл
 FILE *fp;
