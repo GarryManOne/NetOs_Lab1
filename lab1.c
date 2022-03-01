@@ -11,118 +11,118 @@ int get_rand_range_int(int min, int max){
     return rand() % (max - min) + min;
 }
 
-// Функция работающая в отдельном потоке
-void* Animal(void* atr){
+// // Функция работающая в отдельном потоке
+// void* Animal(void* atr){
 
-    // Начальное состояние
-    AnimalAttributes* attributes = (AnimalAttributes*) atr;
+//     // Начальное состояние
+//     AnimalAttributes* attributes = (AnimalAttributes*) atr;
 
-    while (1){
-        // Смотрим продолжительность жизни 
-        if (attributes->kLifeTime == 0 || attributes->kStarvationTime == 0)
-        {
-            pthread_exit(NULL);
-        }
+//     while (1){
+//         // Смотрим продолжительность жизни 
+//         if (attributes->kLifeTime == 0 || attributes->kStarvationTime == 0)
+//         {
+//             pthread_exit(NULL);
+//         }
 
-        // Запоминаем координаты
-        Coordinate coor_old = attributes->coord;
+//         // Запоминаем координаты
+//         Coordinate coor_old = attributes->coord;
 
-        // Случайное движение 
-        switch ((Direction)(get_rand_range_int(0, 3))){
-            case RIGHT:
-                if ((attributes->coord.x + 1) < kSizeX){
-                    attributes->coord.x += 1;
-                }
-                else continue;
-                break;
-            case LEFT: 
-                if ((attributes->coord.x - 1) > 0){
-                    attributes->coord.x -= 1;
-                }
-                else continue;
-                break;
-            case UP: 
-                if ((attributes->coord.y - 1) > 0){
-                   attributes->coord.y -= 1;
-                }
-                else continue;
-                break;
-            case DOWN: 
-                if ((attributes->coord.y + 1) < kSizeY){
-                    attributes->coord.y += 1;
-                }
-                else continue;
-                break;
-            default:
-                break;
-        }
+//         // Случайное движение 
+//         switch ((Direction)(get_rand_range_int(0, 3))){
+//             case RIGHT:
+//                 if ((attributes->coord.x + 1) < kSizeX){
+//                     attributes->coord.x += 1;
+//                 }
+//                 else continue;
+//                 break;
+//             case LEFT: 
+//                 if ((attributes->coord.x - 1) > 0){
+//                     attributes->coord.x -= 1;
+//                 }
+//                 else continue;
+//                 break;
+//             case UP: 
+//                 if ((attributes->coord.y - 1) > 0){
+//                    attributes->coord.y -= 1;
+//                 }
+//                 else continue;
+//                 break;
+//             case DOWN: 
+//                 if ((attributes->coord.y + 1) < kSizeY){
+//                     attributes->coord.y += 1;
+//                 }
+//                 else continue;
+//                 break;
+//             default:
+//                 break;
+//         }
 
-        fprintf(fp, "%u=%d [%d][%d]->[%d][%d]\n", pthread_self(), (char *)attributes->type, attributes->coord.x, attributes->coord.y, coor_old.x, coor_old.y);
+//         fprintf(fp, "%u=%d [%d][%d]->[%d][%d]\n", pthread_self(), (char *)attributes->type, attributes->coord.x, attributes->coord.y, coor_old.x, coor_old.y);
 
-        // Действие при переходе
-        int coordX = attributes->coord.x;
-        int coordY = attributes->coord.y;
+//         // Действие при переходе
+//         int coordX = attributes->coord.x;
+//         int coordY = attributes->coord.y;
 
-        pthread_mutex_lock(&lock_field); // блокировка мьютекса
+//         pthread_mutex_lock(&lock_field); // блокировка мьютекса
 
-        if (actionField[coor_old.x][coor_old.y]->dead == 1)
-        {
-            pthread_exit(NULL);
-        }
+//         if (map[coor_old.x][coor_old.y]->dead == 1)
+//         {
+//             pthread_exit(NULL);
+//         }
 
-        // Проверка какое животное находится в этой ячейке
-        if (actionField[coordX][coordY] != NULL){  
+//         // Проверка какое животное находится в этой ячейке
+//         if (map[coordX][coordY] != NULL){  
             
-            // Спаривание :)
-            if (attributes->type == actionField[coordX][coordY]->type){
-                pthread_t *thread_animal = malloc(sizeof(pthread_t));
-                // printf("%u породил %u\n", pthread_self(), *thread_animal);
-                fprintf(fp, "%u -> + %u\n", pthread_self(), *thread_animal);
-                CreateThreads(thread_animal, 1, attributes->type);
-                pthread_mutex_unlock(&lock_field); // разблокировка мьютекса
-                continue;
-            }
-            // Ест
-            else if ((attributes->type + 1 ) % 3 == actionField[coordX][coordY]->type){
+//             // Спаривание :)
+//             if (attributes->type == map[coordX][coordY]->type){
+//                 pthread_t *thread_animal = malloc(sizeof(pthread_t));
+//                 // printf("%u породил %u\n", pthread_self(), *thread_animal);
+//                 fprintf(fp, "%u -> + %u\n", pthread_self(), *thread_animal);
+//                 CreateThreads(thread_animal, 1, attributes->type);
+//                 pthread_mutex_unlock(&lock_field); // разблокировка мьютекса
+//                 continue;
+//             }
+//             // Ест
+//             else if ((attributes->type + 1 ) % 3 == map[coordX][coordY]->type){
                 
-                // printf("%u съел %u\n", pthread_self(), actionField[coordX][coordY]->thread_id);
-                fprintf(fp, "%u -> x %u\n", pthread_self(), actionField[coordX][coordY]->thread_id);
-                actionField[coordX][coordY]->dead = 1;
+//                 // printf("%u съел %u\n", pthread_self(), map[coordX][coordY]->thread_id);
+//                 fprintf(fp, "%u -> x %u\n", pthread_self(), map[coordX][coordY]->thread_id);
+//                 map[coordX][coordY]->dead = 1;
 
-                AnimalCoordinate *an_coord = malloc(sizeof(AnimalCoordinate));
-                an_coord->thread_id = actionField[coor_old.x][coor_old.y]->thread_id;
-                an_coord->type = attributes->type;
+//                 AnimalCoordinate *an_coord = malloc(sizeof(AnimalCoordinate));
+//                 an_coord->thread_id = map[coor_old.x][coor_old.y]->thread_id;
+//                 an_coord->type = attributes->type;
 
-                actionField[coor_old.x][coor_old.y] = NULL;
+//                 map[coor_old.x][coor_old.y] = NULL;
 
-                actionField[coordX][coordY] = an_coord;
-            }
-            // Его едят
-            else{
-                // printf("%u умер от %u\n", actionField[coor_old.x][coor_old.y]->thread_id, actionField[coordX][coordY]->thread_id);
-                fprintf(fp, "%u -> - %u\n", actionField[coor_old.x][coor_old.y]->thread_id, actionField[coordX][coordY]->thread_id);
-                actionField[coor_old.x][coor_old.y] = NULL;
-                pthread_exit(NULL);
-            }
-        }
-        else
-        {
-            AnimalCoordinate *an_coord = malloc(sizeof(AnimalCoordinate));
+//                 map[coordX][coordY] = an_coord;
+//             }
+//             // Его едят
+//             else{
+//                 // printf("%u умер от %u\n", map[coor_old.x][coor_old.y]->thread_id, map[coordX][coordY]->thread_id);
+//                 fprintf(fp, "%u -> - %u\n", map[coor_old.x][coor_old.y]->thread_id, map[coordX][coordY]->thread_id);
+//                 map[coor_old.x][coor_old.y] = NULL;
+//                 pthread_exit(NULL);
+//             }
+//         }
+//         else
+//         {
+//             AnimalCoordinate *an_coord = malloc(sizeof(AnimalCoordinate));
 
-            an_coord->thread_id = actionField[coor_old.x][coor_old.y]->thread_id;
-            an_coord->type = attributes->type;
+//             an_coord->thread_id = map[coor_old.x][coor_old.y]->thread_id;
+//             an_coord->type = attributes->type;
 
-            actionField[coor_old.x][coor_old.y] = NULL;
-            actionField[coordX][coordY] = an_coord;
-        }
-        pthread_mutex_unlock(&lock_field);
-    }
+//             map[coor_old.x][coor_old.y] = NULL;
+//             map[coordX][coordY] = an_coord;
+//         }
+//         pthread_mutex_unlock(&lock_field);
+//     }
     
-    return NULL;
-}
+//     return NULL;
+// }
 
 // Создание потоков
-void CreateThreads(pthread_t tr[], unsigned int count_threads, TypeAnimal type){
+void CreateThreads(pthread_t* thread, unsigned int count_threads, TypeAnimal type){
 
     for (int i = 0; i < count_threads; i++){
         AnimalAttributes *animal_attributes = malloc(sizeof(AnimalAttributes));
@@ -130,37 +130,29 @@ void CreateThreads(pthread_t tr[], unsigned int count_threads, TypeAnimal type){
         animal_attributes->life_time = kLifeTime;                   // время жизни
         animal_attributes->startvation_time = kStarvationTime;      // время голодания
 
-        MapAttributes *map_attributes = malloc(sizeof(MapAttributes));
-        map_attributes->thread_id = tr[i];                          // id потока
-        map_attributes->type = type;                                // тип животного
-        map_attributes->dead = 0;                                   // состояние
-
         int flag = 0;
         do
         {
             animal_attributes->coord.x = get_rand_range_int(0, kMapSizeX);
             animal_attributes->coord.y = get_rand_range_int(0, kMapSizeY);
             pthread_mutex_lock(&mutexes[animal_attributes->coord.x][animal_attributes->coord.y]);
-            if (actionField[animal_attributes->coord.x][animal_attributes->coord.y] == NULL){
-                actionField[animal_attributes->coord.x][animal_attributes->coord.y] = map_attributes;
+            if (map[animal_attributes->coord.x][animal_attributes->coord.y].thread_id == 0){
+
+                map[animal_attributes->coord.x][animal_attributes->coord.y].dead = 0;
+                map[animal_attributes->coord.x][animal_attributes->coord.y].thread_id = thread[i];
+                map[animal_attributes->coord.x][animal_attributes->coord.y].type = type;
             }
             else{
                 flag = 1;
             }
-        } while ( flag == 0)
+        } while ( flag == 0);
                 
-
-        
-
-        pthread_mutex_unlock(&lock_field); // разблокировка мьютекса
-
-        pthread_create(&tr[i], NULL, &Animal, animal_atr);
+        // pthread_create(&tr[i], NULL, &Animal, animal_attributes);
 
         // Вывод отладочной информации
-        printf("[%d][%d] = %d\n", animal_atr->coord.x, animal_atr->coord.y, type);
-        printf("type=%d l_t=%d s_t=%d [%d] [%d]\n", animal_atr->type, animal_atr->kLifeTime, animal_atr->kStarvationTime, animal_atr->coord.x, animal_atr->coord.y);
-        printf("%u %d\n", animal_coordinate->thread_id = tr[i], animal_coordinate->type);
-
+        printf("[%d][%d] =] %d\n", animal_attributes->coord.x, animal_attributes->coord.y, type);
+        printf("type=%d l_t=%d s_t=%d [%d] [%d]\n", animal_attributes->type, animal_attributes->life_time, animal_attributes->startvation_time, animal_attributes->coord.x, animal_attributes->coord.y);
+        printf("%u %d\n", map[animal_attributes->coord.x][animal_attributes->coord.y].thread_id = thread[i], map[animal_attributes->coord.x][animal_attributes->coord.y].type);
     }
 }
 
@@ -174,12 +166,9 @@ void CreateJoins(pthread_t* tr, unsigned int count_threads){
 // Вывод карты в консоль
 void PrintMap(MapAttributes*** map, unsigned int row, unsigned int column){
     for (int i = 0; i < row; i++){
-            for (int j = 0; j < column; j++)
-            {
-                if (map[i][j] != NULL)
-                {
-                    switch (actionField[i][j]->type)
-                    {
+            for (int j = 0; j < column; j++){
+                if (map[i][j] != NULL){
+                    switch (map[i][j]->type){
                         case ANIMAL_1:
                             printf("[0]");
                             break;
@@ -198,47 +187,14 @@ void PrintMap(MapAttributes*** map, unsigned int row, unsigned int column){
                 }
             }
             printf("\n");
-        }
+    }
 }
 
 // Открытие файла для записи в потоках
 void OpenFile(char* fileName){
-    
-    if ((fp = fopen(fileName, "w")) == NULL)
-    {
+    if ((fp = fopen(fileName, "w")) == NULL){
         printf("Не удалось открыть файл");
         getchar();
-    }
-
-}
-
-// Создание массива мьютексов
-pthread_mutex_t** CreateArrayMutexes(unsigned int row, unsigned int column){
-    pthread_mutex_t** mutexes = (pthread_mutex_t**)malloc(row * sizeof(pthread_mutex_t*));
-
-    for (int i = 0; i < column; i++)
-    {
-        mutexes[i] = (pthread_mutex_t*)malloc(column * sizeof(pthread_mutex_t));
-    }
-     
-    return mutexes;
-}
-
-// Инициализация мьютексов
-void InitArrayMutexes(pthread_mutex_t** array_mutexes, unsigned int row, unsigned int column){
-    for (int i = 0; i < row; i++){
-        for (int j = 0; j < column; j++){
-            pthread_mutex_init(&array_mutexes[i][j], NULL);
-        }
-    }
-}
-
-// Удаление массива мьютексов
-void DeleteArrayMutexes(pthread_mutex_t** array_mutexes, unsigned int row, unsigned int column){
-for (int i = 0; i < row; i++){
-        for (int j = 0; j < column; j++){
-            pthread_mutex_destroy(&array_mutexes[i][j]);
-        }
     }
 }
 
@@ -273,14 +229,17 @@ int main(int argc, char *argv[]){
 
     // Обнуление карты 
     for (int i = 0; i < kMapSizeX; i++){
-        for (int j = 0; j < kMapSizeY; j++){
-            actionField[i][j] = NULL;
+        for (int j = 0; i < kMapSizeY; j++){
+            map[i][j].thread_id = 0;
         }
     }
 
-    // Создание и инициализация мьютексов
-    mutexes = CreateArrayMutexes(kMapSizeX, kMapSizeY);
-    InitArrayMutexes(mutexes, kMapSizeX, kMapSizeY);
+    // Инициализация мьютексов
+    for (int i = 0; i < kMapSizeX; i++){
+        for (int j = 0; j < kMapSizeY; j++){
+            pthread_mutex_init(&mutexes[i][j], NULL);
+        }
+    }
 
     // Создание потоков
     pthread_t animal_1[animal1Count];
@@ -298,6 +257,13 @@ int main(int argc, char *argv[]){
     // CreateJoins(animal_2, animal2Count);
     // CreateJoins(animal_3, animal3Count);
     
+    // Удаление мьютексов 
+    for (int i = 0; i < kMapSizeX; i++){
+        for (int j = 0; j < kMapSizeY; j++){
+            pthread_mutex_destroy(&mutexes[i][j]);
+        }
+    }
+
     return 0;
 }
 

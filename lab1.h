@@ -55,12 +55,8 @@ typedef struct {
 
 // *************************** Глобальные перменные ***********************
 
-// Поле по которым перемещаются животные
-MapAttributes* actionField[kMapSizeX][kMapSizeY];
-
-// Мьютекс
-// pthread_mutex_t lock_field;
-pthread_mutex_t **mutexes;
+MapAttributes map[kMapSizeX][kMapSizeY];
+pthread_mutex_t mutexes[kMapSizeX][kMapSizeY];
 
 // Указатель на файл
 FILE *fp;
@@ -71,7 +67,7 @@ FILE *fp;
 // *************************** Прототипы функций **************************
 
 void* Animal(void* atr);
-void CreateThreads(pthread_t* tr,int count, TypeAnimal type);
+void CreateThreads(pthread_t* tr, unsigned int count_threads, TypeAnimal type);
 int get_rand_range_int(int min, int max);
 pthread_mutex_t** CreateArrayMutexes(unsigned int row, unsigned int column);
 void DeleteArrayMutexes(pthread_mutex_t** array_mutexes, unsigned int row, unsigned int column);
