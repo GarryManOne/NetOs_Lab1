@@ -15,8 +15,8 @@ const int kLifeTime = 10;
 const int kStarvationTime = 5;  
 
 // Размеры карты 
-const unsigned int kMapSizeX = 8;
-const unsigned int kMapSizeY = 8;
+const unsigned int kMapSizeX = 4;
+const unsigned int kMapSizeY = 4;
 
 // ************************************************************************
 
@@ -24,7 +24,7 @@ const unsigned int kMapSizeY = 8;
 // **************************** Описание объектов *************************
 
 // Виды животных
-typedef enum {ANIMAL_1, ANIMAL_2, ANIMAL_3} TypeAnimal;
+typedef enum {ANIMAL_1, ANIMAL_2, ANIMAL_3, NONE} TypeAnimal;
 
 // Передвижение
 typedef enum {RIGHT, LEFT, UP, DOWN} Direction;
@@ -37,64 +37,45 @@ typedef struct {
 
 // Атрибуты животного
 typedef struct {
-    Coordinate coord;
-    TypeAnimal type;
-    int life_time;
-    int startvation_time;
-    pthread_t thread_id;
-    int return_back;
+    Coordinate coord;       // Координаты
+    TypeAnimal type;        // Тип животного
+    int life_time;          // Время жизни
+    int startvation_time;   // Время голодания
 } AnimalAttributes;
-
-// Атрибуты карты
-typedef struct {
-    pthread_t thread_id;
-    TypeAnimal type;
-} MapAttributes;
 
 // ************************************************************************
 
 
 // *************************** Глобальные перменные ***********************
 
+// База данных о животных
+AnimalAttributes db_animals[16];
+
 // Поле по которым перемещаются животные
-MapAttributes** map = NULL;
+int map[4][4];
 
 // Мьютекс
-pthread_mutex_t** mutexes = NULL;
+pthread_mutex_t mutex;
 
 // Указатель на файл
-FILE *log_file = NULL;
+FILE *log_file;
 
 // ************************************************************************
 
 
 // *************************** Прототипы функций **************************
 
+// Создание потоков
+void CreateThread(int row, int column, TypeAnimal type);
+
+// Генерация псевдослучайных чисел на определнном промежутке
+int GetRandRangeInt(int min, int max);
+
+// Функция работающая в отдельном потоке
 void* Animal(void* atr);
 
-// Удаление массива мьютексов
-void DeleteArrayMutexes(pthread_mutex_t** array_mutexes, unsigned int row, unsigned int column);
-
-// Инициализация мьютексов
-void InitArrayMutexes(pthread_mutex_t** array_mutexes, unsigned int row, unsigned int column);
-
-// Создание массива мьютексов
-pthread_mutex_t** CreateArrayMutexes(unsigned int row, unsigned int column);
-
-// Создание карты
-MapAttributes** CreateMap(unsigned int row, unsigned int column);
-
-// Открытие файла для записи в потоках
-FILE* OpenFile(char* fileName);
-
 // Вывод карты в консоль
-void PrintMap(MapAttributes*** map, unsigned int row, unsigned int column);
-
-// Ожидание потоков
-void CreateJoins(pthread_t* threads, unsigned int count_threads);
-
-// Создание потоков
-void CreateThreads(pthread_t* threads, unsigned int count_threads, TypeAnimal type);
+void* PrintMap(void* arg);
 
 // ************************************************************************
 
