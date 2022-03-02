@@ -110,6 +110,8 @@ void* Animal(void* atr){
         if (db_animals[*index].life_time == 0){
             pthread_exit(NULL);
         }
+
+        usleep(50000);
     }
     
     return NULL;
@@ -129,7 +131,12 @@ void CreateThread(int row, int column, TypeAnimal type){
             db_animals[i].life_time = kLifeTime;
             db_animals[i].startvation_time = kStarvationTime;
 
-            pthread_create(animal_id, NULL, &Animal,  NULL);
+            map[row][column] = i;
+            
+            int* index = (int*)malloc(sizeof(int));
+            *index = 0;
+
+            pthread_create(animal_id, NULL, &Animal, index);
             break;
         }
     }
@@ -143,7 +150,13 @@ void* PrintMap(void* arg){
 
             for (int i = 0; i < kMapSizeX; i++){
                 for (int j = 0; j < kMapSizeY; j++){
-                    fprintf(log_file, "[%d]", db_animals[map[i][j]].type);
+                    // if (db_animals[map[i][j]].type != NONE)
+                    // {
+                        fprintf(log_file, "[%d]", db_animals[map[i][j]].type);
+                    // }
+                    // else{
+                    //     fprintf(log_file, "[*]");
+                    // }
                 }
                 fprintf(log_file, "\n");
             }
@@ -205,13 +218,21 @@ int main(int argc, char *argv[]){
         }
     }
 
+    for (int i = 0; i < kMapSizeX*kMapSizeY; i++){
+        db_animals[i].type = NONE;
+    }
+    
     // Создание и инициализация мьютексов
     pthread_mutex_init(&mutex, NULL);    
+
+    pthread_mutex_lock(&mutex);
 
     // Создание потоков
     CreateThread(0, 0, ANIMAL_1);
     CreateThread(1, 3, ANIMAL_2);
     CreateThread(3, 2, ANIMAL_3);
+
+    pthread_mutex_unlock(&mutex);
 
     pthread_t log;
     pthread_create(&log, NULL, PrintMap, NULL);
