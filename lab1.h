@@ -9,10 +9,10 @@
 // ************************* Константы ************************************
 
 // Продолжительность жизни (измеряется в количествах сделанных переходов)
-const int kLifeTime = 10;    
+const int kLifeTime = 15;    
 
 // Продолжительность голодания (измеряется в количествах сделанных переходов)
-const int kStarvationTime = 5;  
+const int kStarvationTime = 10;  
 
 // Размеры карты 
 const unsigned int kMapSizeX = 4;
@@ -75,7 +75,8 @@ int GetRandRangeInt(int min, int max);
 void* Animal(void* atr);
 
 // Вывод карты в консоль
-void* PrintMap(void* arg);
+// void* PrintMap(void* arg);
+void PrintMap(void);
 
 // ************************************************************************
 
