@@ -22,6 +22,7 @@ void* Animal(void* atr){
     while (1){
         // Смотрим продолжительность жизни 
         if (db_animals[*index].life_time == 0 || db_animals[*index].startvation_time == 0){
+            map[db_animals[*index].coord.x][db_animals[*index].coord.y] = 17;
             pthread_exit(NULL);
         }
 
