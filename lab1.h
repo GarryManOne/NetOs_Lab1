@@ -9,14 +9,14 @@
 // ************************* Константы ************************************
 
 // Продолжительность жизни (измеряется в количествах сделанных переходов)
-const int kLifeTime = 10;    
+const int kLifeTime = 15;    
 
 // Продолжительность голодания (измеряется в количествах сделанных переходов)
-const int kStarvationTime = 5;  
+const int kStarvationTime = 10;  
 
 // Размеры карты 
-const unsigned int kMapSizeX = 8;
-const unsigned int kMapSizeY = 8;
+const unsigned int kMapSizeX = 4;
+const unsigned int kMapSizeY = 4;
 
 // ************************************************************************
 
@@ -24,7 +24,7 @@ const unsigned int kMapSizeY = 8;
 // **************************** Описание объектов *************************
 
 // Виды животных
-typedef enum {ANIMAL_1, ANIMAL_2, ANIMAL_3} TypeAnimal;
+typedef enum {ANIMAL_1, ANIMAL_2, ANIMAL_3, NONE} TypeAnimal;
 
 // Передвижение
 typedef enum {RIGHT, LEFT, UP, DOWN} Direction;
@@ -37,40 +37,46 @@ typedef struct {
 
 // Атрибуты животного
 typedef struct {
-    Coordinate coord;
-    TypeAnimal type;
-    int life_time;
-    int startvation_time;
+    Coordinate coord;       // Координаты
+    TypeAnimal type;        // Тип животного
+    int life_time;          // Время жизни
+    int startvation_time;   // Время голодания
 } AnimalAttributes;
-
-// Атрибуты карты
-typedef struct {
-    pthread_t thread_id;
-    TypeAnimal type;
-    int dead; 
-} MapAttributes;
 
 // ************************************************************************
 
 
 // *************************** Глобальные перменные ***********************
 
-MapAttributes map[kMapSizeX][kMapSizeY];
-pthread_mutex_t mutexes[kMapSizeX][kMapSizeY];
+// База данных о животных
+AnimalAttributes db_animals[16];
+
+// Поле по которым перемещаются животные
+int map[4][4];
+
+// Мьютекс
+pthread_mutex_t mutex;
 
 // Указатель на файл
-FILE *fp;
+FILE *log_file;
 
 // ************************************************************************
 
 
 // *************************** Прототипы функций **************************
 
+// Создание потоков
+void CreateThread(int row, int column, TypeAnimal type);
+
+// Генерация псевдослучайных чисел на определнном промежутке
+int GetRandRangeInt(int min, int max);
+
+// Функция работающая в отдельном потоке
 void* Animal(void* atr);
-void CreateThreads(pthread_t* tr, unsigned int count_threads, TypeAnimal type);
-int get_rand_range_int(int min, int max);
-pthread_mutex_t** CreateArrayMutexes(unsigned int row, unsigned int column);
-void DeleteArrayMutexes(pthread_mutex_t** array_mutexes, unsigned int row, unsigned int column);
+
+// Вывод карты в консоль
+// void* PrintMap(void* arg);
+void PrintMap(void);
 
 // ************************************************************************
 
